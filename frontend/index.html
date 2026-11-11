@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>JHCSC Manual Review</title>
+  <meta name="build" content="24">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="stylesheet" href="css/styles.css?v=24">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the main part of the page</a>
+<div id="bar" class="hidden" aria-hidden="true"></div>
+<div id="diag" class="hidden" role="alert"></div>
+<header class="top">
+  <div class="brand">
+    <img id="logo" src="assets/logo.png" width="64" height="64" alt="J.H. Cerilles State College seal" onerror="this.classList.add('hidden');document.getElementById('crest').classList.remove('hidden')">
+    <div class="crest hidden" id="crest" aria-hidden="true">JH</div>
+    <div><h1 id="school">J.H. Cerilles State College</h1><p>Read the manuals. Share what you think.</p></div>
+  </div>
+  <div class="top-right">
+    <span id="user"></span>
+    <div class="comfort" role="group" aria-label="Make this page easier to read">
+      <span class="lbl" id="tsLabel">Text size</span>
+      <div class="group" role="group" aria-labelledby="tsLabel">
+        <button type="button" class="chip" data-size="100" aria-pressed="true" aria-label="Normal text" style="font-size:1rem">A</button>
+        <button type="button" class="chip" data-size="125" aria-pressed="false" aria-label="Large text" style="font-size:1.3rem">A</button>
+        <button type="button" class="chip" data-size="150" aria-pressed="false" aria-label="Extra large text" style="font-size:1.6rem">A</button>
+      </div>
+      <button type="button" id="contrastBtn" class="chip" aria-pressed="false" onclick="toggleContrast()">High contrast: off</button>
+    </div>
+    <button id="signout" class="btn small hidden" style="background:#fff" onclick="logout(this)">Sign out</button>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+<nav id="mainNav" class="nav" aria-label="Main menu">
+  <button class="active" data-view="dashboard" onclick="goView('dashboard')"><span class="ico" aria-hidden="true">🏠</span>Home</button>
+  <button data-view="manuals" onclick="goView('manuals')"><span class="ico" aria-hidden="true">📖</span>Read manuals</button>
+  <button data-view="submit" onclick="goView('submit')"><span class="ico" aria-hidden="true">✏️</span>Write a comment</button>
+  <button data-view="issues" onclick="goView('issues')"><span class="ico" aria-hidden="true">💬</span>All comments</button>
+  <button data-view="archive" onclick="goView('archive')"><span class="ico" aria-hidden="true">✅</span>Finished</button>
+  <button data-view="offline" onclick="goView('offline')"><span class="ico" aria-hidden="true">📤</span>Upload comments</button>
+  <button id="chairTab" class="hidden" data-view="chair" onclick="goView('chair')"><span class="ico" aria-hidden="true">🛡️</span>Chair</button>
+</nav>
+
+<section id="accessGate" class="hidden" aria-labelledby="gateTitle">
+  <div class="panel" style="max-width:42rem;margin:1.5rem auto">
+    <img class="gate-logo" src="assets/logo.png" width="96" height="96" alt="">
+    <h2 id="gateTitle">Create your account or sign in</h2>
+    <p id="accessMessage" class="lead">Anyone can ask for an account with any email. We send a code to prove the email is yours. Then the chair says yes before you can come in.</p>
+    <p class="note" id="gateHelp">New here? Fill in the form below. Already have an account? Type the same email and we send you a new code to sign in. There is no password to remember.</p>
+    <div id="registrationForm">
+      <ol class="steps" aria-label="How to sign in">
+        <li><b aria-hidden="true">1</b><span>Type your email and your name.</span></li>
+        <li><b aria-hidden="true">2</b><span>Press <strong>Send me a code</strong>.</span></li>
+        <li><b aria-hidden="true">3</b><span>Open your email. Type the 6 numbers here.</span></li>
+      </ol>
+      <div class="stack">
+        <div><label for="regEmail">Your email</label><input id="regEmail" type="email" class="field wide" autocomplete="email" placeholder="name@example.com"></div>
+        <div><label for="regName">Your full name</label><input id="regName" class="field wide" autocomplete="name" placeholder="Type your name"></div>
+        <div><label id="regManualsLabel">Which manuals do you check? (You may skip this.)</label><div id="regManuals" class="checks" role="group" aria-labelledby="regManualsLabel" aria-describedby="manualHint"></div><p id="manualHint" class="note">Tick the manuals you will read. The chair makes the final choice.</p></div>
+        <div><button id="sendCode" class="btn primary" onclick="sendCode(this)">Send me a code</button></div>
+        <div id="codeBox" class="hidden"><label for="regCode">Type the 6 numbers from your email</label><input id="regCode" inputmode="numeric" maxlength="6" class="field" placeholder="000000" autocomplete="one-time-code" style="font-size:1.5rem;letter-spacing:.25em;width:12rem"> <button class="btn primary" onclick="verifyCode(this)">Check my code</button></div>
+      </div>
+    </div>
+    <div class="toolbar"><button id="switchEmail" class="btn small hidden" onclick="logout(this)">Use a different email</button></div>
+  </div>
+</section>
+
+<section id="dashboard" aria-labelledby="homeTitle">
+  <div id="boot" class="box">Loading your page… If this message stays here, ask the person who set up the site to check the file js/config.js (API_URL) and that every file was uploaded.</div>
+  <h2 id="homeTitle">Home</h2>
+  <p class="lead">What would you like to do?</p>
+  <div class="actions">
+    <button class="action" onclick="goView('manuals')"><span class="ico" aria-hidden="true">📖</span><b>Read a manual</b><span>Open a manual and highlight words.</span></button>
+    <button class="action" onclick="goView('submit')"><span class="ico" aria-hidden="true">✏️</span><b>Write a comment</b><span>Tell us what you think about a manual.</span></button>
+    <button class="action" onclick="goView('issues')"><span class="ico" aria-hidden="true">💬</span><b>See all comments</b><span>Read what others wrote and vote.</span></button>
+  </div>
+  <div class="toolbar">
+    <button id="sync" class="btn primary hidden" onclick="syncDrive(this)">Get new comments from Google Drive</button>
+    <button id="report" class="btn hidden" onclick="report(this)">Make a report</button>
+  </div>
+  <div id="reportBox" class="box hidden" role="status"></div>
+  <div id="cards" class="cards"></div>
+  <div class="panel">
+    <div class="row" style="align-items:flex-end">
+      <div><h2 style="margin:0">Comments that need work</h2><p class="note" style="margin:.2rem 0 0">These comments are not finished yet.</p></div>
+      <div class="filter">
+        <div><label for="search1">Find words</label><input id="search1" type="search" class="field" placeholder="Type a word" oninput="filterChanged('issueList')"></div>
+        <div><label for="manualFilter">Manual</label><select id="manualFilter" class="field" onchange="filterChanged('issueList')"><option value="">All manuals</option></select></div>
+        <div><label for="statusFilter">Show</label><select id="statusFilter" class="field" onchange="filterChanged('issueList')"><option value="">All not finished</option><option value="Open">Needs work</option><option value="Resolved">Fix written</option></select></div>
+      </div>
+    </div>
+    <div id="issueList" class="issues" style="margin-top:1rem"></div>
+  </div>
+</section>
+
+<section id="issues" class="hidden" aria-labelledby="issuesTitle">
+  <div class="panel">
+    <div class="row" style="align-items:flex-end">
+      <div><h2 id="issuesTitle">All comments</h2><p class="note" style="margin:.2rem 0 0">Every comment people wrote about the manuals. Read it, vote, and talk about it.</p></div>
+      <div class="filter">
+        <div><label for="search2">Find words</label><input id="search2" type="search" class="field" placeholder="Type a word" oninput="filterChanged('issueList2')"></div>
+        <div><label for="manualFilter2">Manual</label><select id="manualFilter2" class="field" onchange="filterChanged('issueList2')"><option value="">All manuals</option></select></div>
+      </div>
+    </div>
+    <div id="issueList2" class="issues" style="margin-top:1rem"></div>
+  </div>
+</section>
+
+<section id="archive" class="hidden" aria-labelledby="archiveTitle">
+  <div class="panel">
+    <div class="row" style="align-items:flex-end">
+      <div><h2 id="archiveTitle">Finished comments</h2><p class="note" style="margin:.2rem 0 0">The chair approved these. You can read them, but not change them.</p></div>
+      <div class="filter"><div><label for="search3">Find words</label><input id="search3" type="search" class="field" placeholder="Type a word" oninput="filterChanged('archiveList')"></div></div>
+    </div>
+    <div id="archiveList" class="issues" style="margin-top:1rem"></div>
+  </div>
+</section>
+
+<section id="manuals" class="hidden" aria-labelledby="manualsTitle">
+  <div class="panel">
+    <h2 id="manualsTitle">Read the manuals</h2>
+    <p class="note">Press the green button to read a manual on this page.</p>
+    <div id="manualList" class="table-wrap"></div>
+  </div>
+  <div id="manualViewerPanel" class="panel hidden">
+    <div class="row">
+      <div>
+        <h2 id="manualViewerTitle">Manual</h2>
+        <ol class="steps" aria-label="How to write a comment while reading">
+          <li><b aria-hidden="true">1</b><span><strong>Highlight</strong> the words you want to talk about.</span></li>
+          <li><b aria-hidden="true">2</b><span>The page and the words show up on the right.</span></li>
+          <li><b aria-hidden="true">3</b><span>Write what you think, then press <strong>Post my comment</strong>.</span></li>
+        </ol>
+      </div>
+      <button class="btn" data-act="close-manual">Close the manual</button>
+    </div>
+    <div class="viewer-grid">
+      <div>
+        <div class="pdf-tools">
+          <span id="pdfPageInfo" class="note" aria-live="polite">—</span>
+          <label for="pdfGo">Go to page</label>
+          <input id="pdfGo" type="number" min="1" class="field" style="width:6rem">
+          <button class="btn small" onclick="useCurrentPage()">Use this page</button>
+        </div>
+        <div id="readerMsg" class="box returned hidden" role="alert"></div>
+        <div id="pdfScroll" class="pdf-scroll" tabindex="0" role="region" aria-label="The manual. Use the arrow keys or the scroll bar to read."></div>
+        <iframe id="manualFrame" class="hidden" title="The manual (PDF)" style="width:100%;height:78vh;min-height:30rem;border:2px solid var(--line-strong);border-radius:.9rem" allow="fullscreen"></iframe>
+      </div>
+      <aside class="viewer-side" aria-label="Comments about this manual">
+        <h3>Comments on this manual <span id="driveCommentCount" class="note"></span></h3>
+        <div id="driveComments" class="dc-list"></div>
+        <h3 style="margin-top:.4rem">Write your comment</h3>
+        <p id="selNote" class="note" style="margin:0" aria-live="polite">Highlight words in the PDF. The page and the words appear here by themselves.</p>
+        <div><label for="vLocation">Page or part</label><input id="vLocation" class="field wide" maxlength="200" placeholder="Fills in when you highlight"></div>
+        <div><label for="vQuote">The words you highlighted</label><textarea id="vQuote" class="field wide" rows="3" maxlength="2000" placeholder="Fills in when you highlight"></textarea></div>
+        <div><label for="vComment">What do you think?</label><textarea id="vComment" class="field wide" rows="4" maxlength="5000" placeholder="Write your idea, question, or problem"></textarea></div>
+        <div><label for="vSuggestion">A better way to say it (you may skip this)</label><textarea id="vSuggestion" class="field wide" rows="2" maxlength="2000"></textarea></div>
+        <button class="btn primary" onclick="submitViewerComment(this)">Post my comment</button>
+        <p class="note">Your comment is saved on the PDF in Google Drive. The chair will add it to the list.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="submit" class="hidden" aria-labelledby="submitTitle">
+  <div class="panel" style="max-width:54rem">
+    <h2 id="submitTitle">Write a comment</h2>
+    <p class="note">Use this if you read the manual on paper or in another program. Tell us where you saw it, then write your comment.</p>
+    <div class="stack" style="margin-top:1rem">
+      <div><label for="entryManual">1. Which manual?</label><select id="entryManual" class="field wide"></select></div>
+      <fieldset><legend>Does it matter for other manuals too? (You may skip this.)</legend><div id="relatedOptions" style="display:grid;gap:.4rem"></div></fieldset>
+      <div><label for="entryLocation">2. Where is it? (page number or part)</label><input id="entryLocation" class="field wide" maxlength="200" placeholder="For example: page 12, or Section 3.2"></div>
+      <div><label for="entryQuote">The words from the manual (you may skip this)</label><textarea id="entryQuote" class="field wide" rows="3" maxlength="2000" placeholder="Copy a few words from the manual"></textarea></div>
+      <div><label for="entryComment">3. What do you think?</label><textarea id="entryComment" class="field wide" rows="5" maxlength="5000" placeholder="Write your idea, question, or problem"></textarea></div>
+      <div><label for="entrySuggestion">A better way to say it (you may skip this)</label><textarea id="entrySuggestion" class="field wide" rows="3" maxlength="2000" placeholder="Write the words you would use"></textarea></div>
+      <div><button class="btn primary" onclick="submitPortalComment(this)">Send my comment</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="chair" class="hidden" aria-labelledby="chairTitle">
+  <div class="panel">
+    <h2 id="chairTitle">Comments waiting for your answer</h2>
+    <p class="note">Approve a fix to finish the comment, or send it back and say what to change.</p>
+    <div id="chairList" class="issues"></div>
+  </div>
+  <div class="panel">
+    <h2>People who want to join</h2>
+    <p class="note">Each person proved their email with a code. Choose the manuals they may check, then let them in. If you tick nothing, they can see all manuals.</p>
+    <div id="registrationList" class="issues"></div>
+  </div>
+  <div class="panel">
+    <h2>People who can use this site</h2>
+    <p class="note">Change their manuals or stop their access. Stopped people cannot sign in.</p>
+    <div id="memberList" class="issues"></div>
+  </div>
+</section>
+
+<section id="offline" class="hidden" aria-labelledby="offlineTitle">
+  <div class="panel">
+    <h2 id="offlineTitle">Upload comments you wrote somewhere else</h2>
+    <p class="note">Pick the way that is easiest for you. You can also use <b>Write a comment</b>.</p>
+  </div>
+  <div class="panel">
+    <h2>From a Word file (.docx)</h2>
+    <p>Use a review written in Word. Lists with numbers or bullets work. Real Word comments and tables with a <b>Comment</b> column work too. A line that starts with <b>Sec. 35:</b> uses that section as the place, and <b>Fix:</b> becomes the better wording.</p>
+    <p class="note">Your file is read on your own computer. It is not sent anywhere. You see what was found and choose what to add. Adding the same file twice does not make copies.</p>
+    <div class="stack" style="margin-top:.8rem">
+      <div><label for="wordManual">Which manual is the review about?</label><select id="wordManual" class="field wide"></select></div>
+      <div><label for="wordFile">Your Word file</label><input id="wordFile" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="field wide"></div>
+      <div><button class="btn primary" onclick="readWordReview(this)">Read the Word file</button></div>
+    </div>
+    <div id="wordPreview" class="hidden" style="margin-top:1.25rem">
+      <p id="wordSummary" style="margin:0 0 .6rem;font-weight:700"></p>
+      <div class="toolbar" style="margin:0 0 .6rem"><button class="btn small" onclick="toggleWordAll(true)">Select all</button><button class="btn small" onclick="toggleWordAll(false)">Select none</button></div>
+      <div id="wordList" class="checks" style="max-height:26rem"></div>
+      <button class="btn primary" style="margin-top:.9rem" onclick="importWordReview(this)">Import the ticked comments</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>From a PDF with notes</h2>
+    <p>Choose the manual and your PDF with sticky notes. Each note becomes a comment with its page number.</p>
+    <p class="note">Your PDF is read on your own computer. Highlights or drawings with no written note cannot be used; add those with <b>Write a comment</b>. Adding the same file twice does not make copies.</p>
+    <div class="stack" style="margin-top:.8rem">
+      <div><label for="annotatedManual">Which manual?</label><select id="annotatedManual" class="field wide"></select></div>
+      <div><label for="annotatedPdf">Your PDF with notes</label><input id="annotatedPdf" type="file" accept="application/pdf,.pdf" class="field wide"></div>
+      <div><button class="btn primary" onclick="capturePdfNotes(this)">Get the notes</button></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>From a spreadsheet (CSV)</h2>
+    <p>Download the sheet, write one comment on each row, then upload it. Keep the column names. Type the manual name exactly as it is in <b>Read manuals</b>.</p>
+    <div class="toolbar"><button class="btn primary" onclick="downloadCommentTemplate()">Download the sheet (CSV)</button></div>
+    <div class="stack" style="margin-top:1rem">
+      <div><label for="commentCsv">Your finished sheet</label><input id="commentCsv" type="file" accept=".csv,text/csv" class="field wide"></div>
+      <div><button class="btn primary" onclick="importCommentTemplate(this)">Add the comments from my sheet</button></div>
+    </div>
+  </div>
+</section>
+
+<div id="message" class="hidden" role="status" aria-live="polite"></div>
+<p class="foot">Version 24</p>
+</main>
+<script src="js/config.js?v=24"></script>
+<script src="js/api.js?v=24"></script>
+<script src="js/vendor/jszip/jszip.min.js?v=24"></script>
+<script src="js/wordreview.js?v=24"></script>
+<script src="js/app.js?v=24"></script>
+</body>
+</html>

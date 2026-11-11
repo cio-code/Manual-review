@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>JHCSC Manual Review</title>
-  <meta name="build" content="24">
+  <meta name="build" content="26">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
-  <link rel="stylesheet" href="css/styles.css?v=24">
+  <link rel="stylesheet" href="css/styles.css?v=26">
 </head>
 <body>
 <a class="skip" href="#main">Skip to the main part of the page</a>
@@ -16,7 +16,7 @@
 <div id="diag" class="hidden" role="alert"></div>
 <header class="top">
   <div class="brand">
-    <img id="logo" src="assets/logo.png" width="64" height="64" alt="J.H. Cerilles State College seal" onerror="this.classList.add('hidden');document.getElementById('crest').classList.remove('hidden')">
+    <img id="logo" data-logo width="64" height="64" alt="J.H. Cerilles State College seal" onerror="this.classList.add('hidden');document.getElementById('crest').classList.remove('hidden')">
     <div class="crest hidden" id="crest" aria-hidden="true">JH</div>
     <div><h1 id="school">J.H. Cerilles State College</h1><p>Read the manuals. Share what you think.</p></div>
   </div>
@@ -48,7 +48,7 @@
 
 <section id="accessGate" class="hidden" aria-labelledby="gateTitle">
   <div class="panel" style="max-width:42rem;margin:1.5rem auto">
-    <img class="gate-logo" src="assets/logo.png" width="96" height="96" alt="">
+    <img class="gate-logo" data-logo width="96" height="96" alt="">
     <h2 id="gateTitle">Create your account or sign in</h2>
     <p id="accessMessage" class="lead">Anyone can ask for an account with any email. We send a code to prove the email is yours. Then the chair says yes before you can come in.</p>
     <p class="note" id="gateHelp">New here? Fill in the form below. Already have an account? Type the same email and we send you a new code to sign in. There is no password to remember.</p>
@@ -81,9 +81,8 @@
   </div>
   <div class="toolbar">
     <button id="sync" class="btn primary hidden" onclick="syncDrive(this)">Get new comments from Google Drive</button>
-    <button id="report" class="btn hidden" onclick="report(this)">Make a report</button>
+    <button id="report" class="btn hidden" onclick="goView('reportView')">🖨️ Make a report</button>
   </div>
-  <div id="reportBox" class="box hidden" role="status"></div>
   <div id="cards" class="cards"></div>
   <div class="panel">
     <div class="row" style="align-items:flex-end">
@@ -183,6 +182,25 @@
   </div>
 </section>
 
+<section id="reportView" class="hidden" aria-labelledby="reportTitle">
+  <div class="panel no-print">
+    <h2 id="reportTitle">Make a report</h2>
+    <p class="note">Choose what to put in the report. Then press <b>Print or save as PDF</b>. In the window that opens, choose <b>Save as PDF</b> to keep a copy.</p>
+    <div class="filter" style="margin-top:.8rem">
+      <div><label for="reportManual">Manual</label><select id="reportManual" class="field" onchange="renderReport()"><option value="">All manuals</option></select></div>
+      <div><label for="reportShow">Which comments?</label><select id="reportShow" class="field" onchange="renderReport()"><option value="all">All comments</option><option value="done">Finished comments only</option></select></div>
+      <div><label class="check" style="margin:0"><input type="checkbox" id="reportTalk" checked onchange="renderReport()"> Include the messages people wrote</label></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" onclick="window.print()">🖨️ Print or save as PDF</button>
+      <button class="btn" onclick="report(this)">Also save a copy in Google Drive</button>
+      <button class="btn" onclick="goView('dashboard')">Back to Home</button>
+    </div>
+    <div id="reportBox2" class="box hidden" role="status"></div>
+  </div>
+  <div id="reportDoc" class="paper" aria-label="The report"></div>
+</section>
+
 <section id="chair" class="hidden" aria-labelledby="chairTitle">
   <div class="panel">
     <h2 id="chairTitle">Comments waiting for your answer</h2>
@@ -244,12 +262,13 @@
 </section>
 
 <div id="message" class="hidden" role="status" aria-live="polite"></div>
-<p class="foot">Version 24</p>
+<p class="foot">Version 26</p>
 </main>
-<script src="js/config.js?v=24"></script>
-<script src="js/api.js?v=24"></script>
-<script src="js/vendor/jszip/jszip.min.js?v=24"></script>
-<script src="js/wordreview.js?v=24"></script>
-<script src="js/app.js?v=24"></script>
+<script src="js/config.js?v=26"></script>
+<script src="js/logo.js?v=26"></script>
+<script src="js/api.js?v=26"></script>
+<script src="js/vendor/jszip/jszip.min.js?v=26"></script>
+<script src="js/wordreview.js?v=26"></script>
+<script src="js/app.js?v=26"></script>
 </body>
 </html>

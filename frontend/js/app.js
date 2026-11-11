@@ -1,5 +1,8 @@
 /* JHCSC Manual Review - the website logic. Talks to the Apps Script API through js/api.js. */
-const BUILD='24';   // must equal <meta name="build"> in index.html and the ?v= on every file; change all of them together on each release
+const BUILD='26';   // must equal <meta name="build"> in index.html and the ?v= on every file; change all of them together on each release
+/* The seal is built into js/logo.js, so it shows even if the assets folder was not copied. */
+(function(){const L=window.MR_LOGO||'assets/logo.png';document.querySelectorAll('img[data-logo]').forEach(i=>{i.src=L})})();
+let lastLogoTried='';
 let STALE='';   // set when index.html and app.js are from different releases; the banner then stays on screen
 (function(){
   const m=document.querySelector('meta[name=build]');
@@ -86,10 +89,10 @@ function draw(){
   if(!state.chair&&state.accessStatus!=='Approved'){drawGate();return}
   $('accessGate').classList.add('hidden');$('mainNav').classList.remove('hidden');
   $('chairTab').classList.toggle('hidden',!state.chair);$('sync').classList.toggle('hidden',!state.chair);$('report').classList.toggle('hidden',!state.chair);
-  if(state.logoUrl&&safeUrl(state.logoUrl)){$('logo').src=safeUrl(state.logoUrl);$('logo').classList.remove('hidden');$('crest').classList.add('hidden')}
+  if(state.logoUrl&&safeUrl(state.logoUrl)&&state.logoUrl!==lastLogoTried){lastLogoTried=state.logoUrl;const t=new Image();t.onload=()=>{$('logo').src=t.src};t.src=safeUrl(state.logoUrl)}   // a server LOGO_URL is used only if its picture really loads
   const labels=[['Manuals',state.cards.manuals],['All comments',state.cards.total],['Not finished',state.cards.open],['Fix written',state.cards.resolved],['Finished',state.cards.archived]];
   $('cards').innerHTML=labels.map(x=>`<div class="card"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('');
-  ['manualFilter','manualFilter2'].forEach(id=>{const s=$(id),v=s.value;s.innerHTML='<option value="">All manuals</option>'+state.manuals.map(m=>`<option value="${esc(m['File ID'])}">${esc(m['Manual title'])}</option>`).join('');s.value=v});
+  ['manualFilter','manualFilter2','reportManual'].forEach(id=>{const s=$(id),v=s.value;s.innerHTML='<option value="">All manuals</option>'+state.manuals.map(m=>`<option value="${esc(m['File ID'])}">${esc(m['Manual title'])}</option>`).join('');s.value=v});
   $('manualList').innerHTML=state.manuals.length?`<table><thead><tr><th>Manual</th><th>What do you want to do?</th><th>Updated</th><th>Comments</th></tr></thead><tbody>${state.manuals.map(m=>{const count=state.issues.filter(i=>i.manualIds.includes(m['File ID'])).length;const download='https://drive.google.com/uc?export=download&id='+encodeURIComponent(m['File ID']);return `<tr><td>${esc(m['Manual title'])}</td><td><button class="btn small primary" data-act="view-manual" data-id="${esc(m['File ID'])}">\uD83D\uDCD6 Read it here</button> &nbsp; <a href="${esc(download)}" target="_blank" rel="noopener">Download</a></td><td>${date(m['Last synced'])}</td><td>${count}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No manuals yet. The chair can get them from Google Drive.</div>';
   const mine=assignable(),primary=$('entryManual'),related=$('relatedOptions'),annotated=$('annotatedManual'),priorPrimary=primary.value,priorPdf=annotated.value,priorRelated=checkedIds(related);
   const options=mine.map(m=>`<option value="${esc(m['File ID'])}">${esc(m['Manual title'])}</option>`).join('');
@@ -98,6 +101,7 @@ function draw(){
   if(mine.some(m=>m['File ID']===priorPrimary))primary.value=priorPrimary;if(mine.some(m=>m['File ID']===priorPdf))annotated.value=priorPdf;
   const wordSel=$('wordManual'),priorWord=wordSel.value;wordSel.innerHTML='<option value="">Choose a manual</option>'+options;if(mine.some(m=>m['File ID']===priorWord))wordSel.value=priorWord;
   renderIssues('issueList');renderIssues('issueList2');renderArchive();renderChair();
+  if(currentView==='reportView')renderReport();
   showView(currentView);
 }
 function drawGate(){
@@ -122,7 +126,7 @@ function showView(view){
   $(view).classList.remove('hidden');
   document.querySelectorAll('.nav button').forEach(b=>{const on=b.dataset.view===view;b.classList.toggle('active',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
 }
-function goView(v){showView(v);window.scrollTo({top:0,behavior:'smooth'})}
+function goView(v){showView(v);if(v==='reportView')renderReport();window.scrollTo({top:0,behavior:'smooth'})}
 function filterChanged(target){ui.limit[target]=25;renderIssues(target);if(target==='archiveList')renderArchive()}
 
 /* ---------- issue cards ---------- */
@@ -415,11 +419,51 @@ function syncDrive(btn){
   return run(btn,async()=>{const r=await call('mrmsSyncDriveComments');await refresh();
     toast(`${r.count} new comment(s) imported`+(r.updated?`, ${r.updated} updated`:'')+(r.manualsAdded?`, ${r.manualsAdded} new manual(s)`:'')+(r.deactivated?`, ${r.deactivated} manual(s) no longer in the folder were hidden`:'')+'.'+(r.partial?' Time limit reached; run the sync again to continue.':''),!!r.partial)});
 }
+/* "Also save a copy in Google Drive": the server makes a Google Doc and a PDF. */
 function report(btn){
-  if(!state.chair)return;const sel=$('manualFilter').value;
-  return run(btn,async()=>{const r=await call('mrmsGenerateReport',sel),box=$('reportBox'),pdf=safeUrl(r.url),doc=safeUrl(r.docUrl);
-    box.innerHTML='<b>Report ready: '+esc(r.title)+'</b><br>'+(pdf?`<a href="${esc(pdf)}" target="_blank" rel="noopener">Open PDF</a>`:'')+(doc?` &nbsp;·&nbsp; <a href="${esc(doc)}" target="_blank" rel="noopener">Open Google Doc</a>`:'')+(r.shared?'':'<br><span class="note">Could not share automatically. Ask the coordinator to share the files with you.</span>');
-    box.classList.remove('hidden');toast('Your report is ready.')});
+  if(!state.chair)return;const sel=$('reportManual').value;
+  return run(btn,async()=>{const r=await call('mrmsGenerateReport',sel),box=$('reportBox2'),pdf=safeUrl(r.url),doc=safeUrl(r.docUrl);
+    box.innerHTML='<b>Copy saved: '+esc(r.title)+'</b><br>'+(pdf?`<a href="${esc(pdf)}" target="_blank" rel="noopener">Open PDF</a>`:'')+(doc?` &nbsp;·&nbsp; <a href="${esc(doc)}" target="_blank" rel="noopener">Open Google Doc</a>`:'')+(r.shared?'':'<br><span class="note">Could not share automatically. Ask the coordinator to share the files with you.</span>');
+    box.classList.remove('hidden');toast('Your copy is saved in Google Drive.')});
+}
+
+/* ---------- the printable report: letterhead with the school seal, summary, manuals, history, signatures ---------- */
+const PLAIN_STATUS={Open:'Needs work',Resolved:'Fix written (waiting for the chair)',Archived:'Finished (approved by the chair)'};
+function renderReport(){
+  const doc=$('reportDoc');if(!doc||!state||!state.chair)return;
+  const mid=$('reportManual').value,doneOnly=$('reportShow').value==='done',talk=$('reportTalk').checked;
+  const rows=state.issues.filter(i=>(!mid||i.manualIds.includes(mid))&&(!doneOnly||i.status==='Archived')).sort((a,b)=>String(a.created).localeCompare(String(b.created)));
+  const count=s=>rows.filter(i=>i.status===s).length;
+  const manuals=state.manuals.filter(m=>!mid||m['File ID']===mid);
+  const now=new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  const votes=rows.reduce((s,i)=>s+i.tally.Agree+i.tally.Disagree+i.tally['Needs discussion'],0);
+  const msgs=rows.reduce((s,i)=>s+i.comments.filter(c=>c.time).length,0);
+  const logo=$('logo')&&$('logo').getAttribute('src')||'assets/logo.png';
+  const school=String(state.school||'').toUpperCase();
+
+  const inv=manuals.map(m=>{const mt=rows.filter(i=>i.manualIds.includes(m['File ID']));return `<tr><td>${esc(m['Manual title'])}</td><td>${mt.length}</td><td>${mt.filter(i=>i.status==='Archived').length}</td><td>${mt.filter(i=>i.status==='Resolved').length}</td><td>${mt.filter(i=>i.status==='Open').length}</td></tr>`}).join('');
+
+  // each comment is listed once, under the first of its manuals that is in this report
+  const byManual=new Map(manuals.map(m=>[m['File ID'],{title:m['Manual title'],items:[]}])),otherGroup={title:'Other manuals',items:[]};
+  rows.forEach(i=>{const key=i.manualIds.find(x=>byManual.has(x));(key?byManual.get(key):otherGroup).items.push(i)});
+  const groups=[...byManual.values()];if(otherGroup.items.length)groups.push(otherGroup);
+  const history=groups.filter(g=>g.items.length).map(g=>`<h4>${esc(g.title)}</h4>`+g.items.map((i,k)=>{
+    const others=i.manualTitles.filter(Boolean).slice(1);
+    const talkHtml=talk&&i.comments.some(c=>c.time)?`<div class="small"><b>Messages:</b>${i.comments.filter(c=>c.time).map(c=>`<div style="margin:.25rem 0 0 .8rem;border-left:2px solid #bbb;padding-left:.6rem"><b>${esc(c.email)}</b>, ${date(c.time)}: ${esc(c.message)}</div>`).join('')}</div>`:'';
+    return `<div class="th"><b>${k+1}.</b> <b>${esc(PLAIN_STATUS[i.status]||i.status)}</b> \u00B7 ${esc(i.author||'Reviewer')}, ${date(i.created)}${others.length?' \u00B7 Also affects: '+esc(others.join('; ')):''}`
+     +`<div class="ob">${esc(i.comment)}</div>`
+     +`<div class="small"><b>Votes:</b> Agree ${i.tally.Agree}, Disagree ${i.tally.Disagree}, Let\u2019s talk ${i.tally['Needs discussion']} (out of ${i.eligible} reviewers). ${esc(consensusText(i.consensus))}.</div>`
+     +(i.resolution?`<div class="small"><b>The fix that was written:</b> ${esc(i.resolution)}</div>`:'')
+     +(i.decision?`<div class="small"><b>The chair says:</b> ${esc(decisionText(i.decision))}${i.chairDate?' on '+date(i.chairDate):''}${i.chairEmail?' ('+esc(i.chairEmail)+')':''}</div>`:'')
+     +talkHtml+`</div>`}).join('')).join('');
+
+  const people=(state.members||[]).filter(m=>m.active).map(m=>`<div><b>${esc(m.name||m.email)}</b><br>TWG member</div>`).join('');
+  doc.innerHTML=`<div class="lh"><img src="${esc(logo)}" alt="" width="86" height="86"><div><div>Republic of the Philippines</div><h1>${esc(school)}</h1><div><b>Historical Report on the Review of Institutional Manuals</b></div></div></div>`
+   +`<p class="info"><b>Manual${manuals.length===1?'':'s'} covered:</b> ${mid?esc(manuals.map(m=>m['Manual title']).join(', ')):'All manuals ('+manuals.length+')'}<br><b>Comments included:</b> ${doneOnly?'Finished comments only':'All comments'}<br><b>Report made:</b> ${esc(now)}<br><b>Made by:</b> ${esc(state.email)}</p>`
+   +`<h3>I. Summary</h3><p>As of ${esc(now)}, the review team recorded <b>${rows.length}</b> comment(s) on the manuals. <b>${count('Archived')}</b> are finished (approved by the chair), <b>${count('Resolved')}</b> have a fix written and are waiting for the chair, and <b>${count('Open')}</b> still need work. Reviewers cast <b>${votes}</b> vote(s) and wrote <b>${msgs}</b> message(s).</p>`
+   +`<h3>II. Manuals reviewed</h3>${manuals.length?`<table><thead><tr><th>Manual</th><th>Comments</th><th>Finished</th><th>Fix written</th><th>Needs work</th></tr></thead><tbody>${inv}</tbody></table>`:'<p>No manuals yet.</p>'}`
+   +`<h3>III. History of the comments and how they were answered</h3>${history||'<p>No comments to report yet.</p>'}`
+   +`<h3>IV. Prepared and noted by</h3>${people?`<div class="sig">${people}</div>`:''}<div class="sig"><div><b>Prepared by:</b><br>Name and signature</div><div><b>Noted by:</b><br>TWG Chairperson</div></div>`;
 }
 
 /* ---------- add / import comments ---------- */

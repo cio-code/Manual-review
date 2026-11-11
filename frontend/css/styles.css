@@ -170,3 +170,32 @@ th{font-size:1rem;color:var(--muted);background:var(--bg)}
 .textLayer .markedContent{display:contents}
 .textLayer span[role=img]{-webkit-user-select:none;user-select:none;cursor:default}
 .textLayer ::selection{background:rgba(7,91,67,.35)}
+
+/* ---------- the report (on screen and on paper) ---------- */
+.paper{background:#fff;border:2px solid var(--line);border-radius:var(--radius);max-width:56rem;margin:1rem auto;padding:2.5rem 3rem;font-family:Georgia,"Times New Roman",serif;color:#111;font-size:1rem;line-height:1.55}
+.paper h1{font-size:1.45rem;margin:.15rem 0;letter-spacing:.02em}
+.paper h3{font-size:1.1rem;margin:1.7rem 0 .5rem;border-bottom:1px solid #777;padding-bottom:.2rem}
+.paper h4{font-size:1.02rem;margin:1.1rem 0 .3rem}
+.paper p{margin:.4rem 0}
+.paper .lh{display:flex;align-items:center;justify-content:center;gap:1.2rem;text-align:center;border-bottom:3px double #111;padding-bottom:.9rem}
+.paper .lh img{height:5.4rem;width:5.4rem;flex-shrink:0}
+.paper .info{font-size:.95rem;margin-top:.9rem}
+.paper table{border-collapse:collapse;width:100%;min-width:0;font-size:.95rem}
+.paper th,.paper td{border:1px solid #777;padding:.35rem .55rem;text-align:left;background:#fff;color:#111;vertical-align:top}
+.paper th{background:#eee}
+.paper .th{border:1px solid #aaa;padding:.6rem .8rem;margin:.6rem 0;break-inside:avoid;font-size:.95rem}
+.paper .ob{background:#fdeeee;border-left:4px solid #b32d2d;padding:.4rem .65rem;margin:.45rem 0;white-space:pre-wrap}
+.paper .small{font-size:.9rem;margin-top:.3rem}
+.paper .sig{display:grid;grid-template-columns:1fr 1fr;gap:2.4rem 2.5rem;margin-top:2.4rem}
+.paper .sig div{border-top:1px solid #000;padding-top:.3rem;font-size:.95rem}
+@page{size:A4;margin:14mm}
+@media print{
+  html{font-size:100%!important}
+  body{background:#fff;font-size:11pt}
+  .top,#mainNav,.skip,#bar,#diag,#message,.foot,.no-print{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .paper{border:0;border-radius:0;padding:0;max-width:none;margin:0;font-size:11pt}
+  .paper .ob,.paper th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .paper h3{break-after:avoid}
+}
+@media(max-width:40rem){.paper{padding:1.2rem}.paper .lh{flex-direction:column}.paper .sig{grid-template-columns:1fr}}

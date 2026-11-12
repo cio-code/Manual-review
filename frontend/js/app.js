@@ -1,5 +1,5 @@
 /* JHCSC Manual Review - the website logic. Talks to the Apps Script API through js/api.js. */
-const BUILD='26';   // must equal <meta name="build"> in index.html and the ?v= on every file; change all of them together on each release
+const BUILD='27';   // must equal <meta name="build"> in index.html and the ?v= on every file; change all of them together on each release
 /* The seal is built into js/logo.js, so it shows even if the assets folder was not copied. */
 (function(){const L=window.MR_LOGO||'assets/logo.png';document.querySelectorAll('img[data-logo]').forEach(i=>{i.src=L})})();
 let lastLogoTried='';
@@ -399,8 +399,9 @@ function submitViewerComment(btn){
 function sendCode(btn){
   const email=$('regEmail').value.trim(),name=$('regName').value.trim(),ids=checkedIds($('regManuals'));
   if(!EMAIL_RE.test(email)){toast('Please type your full email address.',true);return}
-  if(name.length<2){toast('Please type your name.',true);return}
-  return run(btn,async()=>{await call('mrmsSendRegistrationCode',email,name,ids);$('codeBox').classList.remove('hidden');$('regCode').focus();toast('We sent a code to your email. Open your email and type the 6 numbers here.')});
+  return run(btn,async()=>{const r=await call('mrmsSendRegistrationCode',email,name,ids);
+    if(r&&r.skipVerification){sessionToken=r.token;store.set('mrmsSession',sessionToken);await refresh();toast('You are in. Welcome!');return}
+    $('codeBox').classList.remove('hidden');$('regCode').focus();toast('We sent a code to your email. Open your email and type the 6 numbers here.')});
 }
 function verifyCode(btn){
   const email=$('regEmail').value.trim(),code=$('regCode').value.trim();
